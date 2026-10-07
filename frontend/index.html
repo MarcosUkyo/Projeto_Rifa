@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Crie rifas online, venda números e compartilhe nas redes." />
+    <title>Rifa Online</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%9F%EF%B8%8F%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="avisoArquivo" class="faixa" hidden>
+      <div>
+        <h2>Abra pelo servidor</h2>
+        <p>
+          Esta página precisa do servidor para funcionar. Feche esta aba, rode
+          <code>python run.py</code> na pasta do projeto e o site abre sozinho em
+          <code>http://localhost:5000</code>.
+        </p>
+      </div>
+    </div>
+
+    <header class="topo">
+      <a class="marca" href="/">🎟️ Rifa Online</a>
+      <div class="acoes">
+        <div class="cores" id="cores">
+          <input type="color" id="corSite" aria-label="Escolher cor do site" title="Cor do site" />
+        </div>
+        <button class="btn suave" id="btnAdmin" hidden>Painel ADM</button>
+        <button class="btn suave" id="btnPerfil" hidden></button>
+        <button class="btn suave" id="btnEntrar">Entrar</button>
+        <button class="btn suave" id="btnSair" hidden>Sair</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ===== Lista de rifas ===== -->
+      <section id="viewLista" class="view">
+        <div class="hero">
+          <h1>Rifas da empresa, só para quem recebeu o link</h1>
+          <p>
+            Cada rifa tem um link exclusivo. Quem recebe o link entra, escolhe os números e
+            participa. Gerentes criam e sorteiam; participantes acompanham seus números.
+          </p>
+          <button class="btn claro" id="btnCriar" hidden>Criar rifa</button>
+        </div>
+        <div id="lista" class="cards"></div>
+        <p id="vazio" class="mut" hidden></p>
+      </section>
+
+      <!-- ===== Uma rifa ===== -->
+      <section id="viewRifa" class="view" hidden>
+        <button class="btn suave" id="btnVoltar">Voltar às rifas</button>
+        <article class="detalhe">
+          <div class="capa" id="capa"></div>
+          <div class="info">
+            <h1 id="rTitulo"></h1>
+            <p class="mut" id="rOrg"></p>
+            <p class="status" id="rStatus"></p>
+            <p class="resumo" id="rResumo"></p>
+            <p class="premio" id="rPremio"></p>
+            <p class="valor" id="rValor"></p>
+            <div class="barra"><span id="rBarra"></span></div>
+            <p class="mut" id="rVend"></p>
+          </div>
+        </article>
+
+        <div class="painel">
+          <h2>Escolha seus números</h2>
+          <div id="grade" class="grade"></div>
+          <div class="legenda">
+            <span class="liv">Livre</span><span class="sel">Selecionado</span>
+            <span class="meu">Seu número</span><span class="ven">Vendido</span>
+            <span class="ganhou">Sorteado</span>
+          </div>
+          <div class="compra" id="compra" hidden>
+            <span id="resumoCompra"></span>
+            <button class="btn" id="btnComprar">Comprar</button>
+          </div>
+          <p class="mut peq">
+            Ao comprar, o organizador da rifa passa a ver seu nome, telefone e e-mail para poder
+            entrar em contato.
+          </p>
+        </div>
+
+        <div class="painel" id="painelOrg" hidden>
+          <h2>Painel do organizador</h2>
+          <div class="botoes">
+            <button class="btn" id="btnSortear" hidden>🎲 Sortear agora</button>
+            <button class="btn suave" id="btnPart">Ver participantes</button>
+            <button class="btn suave" id="btnEditar">Editar rifa</button>
+            <button class="btn suave perigo-txt" id="btnExcluirRifa">Excluir rifa</button>
+          </div>
+          <p class="mut peq" id="dicaSorteio" hidden></p>
+          <div id="listaPart"></div>
+        </div>
+
+        <div class="painel">
+          <h2>Compartilhar e baixar a rifa</h2>
+          <p class="mut peq">
+            O link desta rifa é o acesso dela: só entra quem receber o link. Compartilhe com quem
+            deve participar.
+          </p>
+          <div class="botoes">
+            <button class="btn" id="btnNativo" hidden>Compartilhar imagem</button>
+            <button class="btn suave" id="btnWhats">WhatsApp</button>
+            <button class="btn suave" id="btnInsta">Instagram</button>
+            <button class="btn suave" id="btnFace">Facebook</button>
+            <button class="btn suave" id="btnCopiar">Copiar link</button>
+          </div>
+          <div class="botoes">
+            <button class="btn suave" data-baixar="png">Baixar PNG</button>
+            <button class="btn suave" data-baixar="jpg">Baixar JPG</button>
+            <button class="btn suave" data-baixar="pdf">Baixar PDF</button>
+          </div>
+          <p class="mut peq">
+            O Instagram não permite compartilhar por link: o botão baixa a imagem para você publicar
+            no feed ou nos stories.
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== Minha conta ===== -->
+      <section id="viewPerfil" class="view" hidden>
+        <button class="btn suave" id="btnVoltarPerfil">Voltar às rifas</button>
+
+        <div class="painel">
+          <h2>Meus dados</h2>
+          <p class="mut" id="pDoc"></p>
+          <p class="mut" id="pCargo"></p>
+          <p class="aviso-email" id="pAvisoEmail" hidden>
+            Cadastre um e-mail: é por ele que você recupera a senha.
+          </p>
+          <form id="formPerfil" class="form">
+            <label>Nome <input id="pNome" data-mascara="nome" maxlength="100" required /></label>
+            <label>
+              E-mail
+              <input id="pEmail" type="email" data-mascara="email" maxlength="120" required />
+            </label>
+            <label>
+              Telefone com DDD (opcional)
+              <input id="pTel" type="tel" data-mascara="telefone" maxlength="15" />
+            </label>
+            <button class="btn">Salvar dados</button>
+          </form>
+        </div>
+
+        <div class="painel">
+          <h2>Alterar senha</h2>
+          <form id="formSenha" class="form">
+            <label>
+              Senha atual
+              <input id="pAtual" type="password" autocomplete="current-password" required />
+            </label>
+            <label>
+              Nova senha (mínimo 8 caracteres)
+              <input
+                id="pNova"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                required
+              />
+            </label>
+            <label>
+              Repita a nova senha
+              <input
+                id="pNova2"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                required
+              />
+            </label>
+            <button class="btn">Alterar senha</button>
+          </form>
+        </div>
+
+        <div class="painel" id="pRifasPainel">
+          <h2>Minhas rifas</h2>
+          <div id="pRifas"></div>
+        </div>
+
+        <div class="painel">
+          <h2>Minhas participações</h2>
+          <div id="pPart"></div>
+        </div>
+
+        <div class="painel zona">
+          <h2>Excluir conta</h2>
+          <p class="mut">
+            Apaga seus dados e as suas compras. Antes, exclua as rifas que você criou.
+          </p>
+          <div class="botoes">
+            <button class="btn perigo" id="btnExcluirConta">Excluir minha conta</button>
+          </div>
+        </div>
+      </section>
+      <!-- ===== Painel do ADM ===== -->
+      <section id="viewAdmin" class="view" hidden>
+        <button class="btn suave" id="btnVoltarAdmin">Voltar às rifas</button>
+        <div class="painel">
+          <h2>Usuários e cargos</h2>
+          <p class="mut peq">
+            Participante: participa por link. Gerente: cria e gerencia as próprias rifas. ADM:
+            gerencia tudo.
+          </p>
+          <div id="aUsuarios"></div>
+        </div>
+        <div class="painel">
+          <h2>Todas as rifas</h2>
+          <div id="aRifas"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="rodape">Código aberto sob licença MIT</footer>
+
+    <!-- ===== Janelas ===== -->
+    <dialog id="dlgAuth">
+      <button type="button" class="fechar" data-fechar aria-label="Fechar">×</button>
+      <div class="abas" id="abas">
+        <button type="button" class="aba on" data-aba="login">Entrar</button>
+        <button type="button" class="aba" data-aba="cadastro">Cadastrar</button>
+      </div>
+
+      <form id="formLogin" class="form">
+        <label>
+          CPF ou CNPJ
+          <input
+            id="lDoc"
+            data-mascara="doc"
+            inputmode="numeric"
+            maxlength="18"
+            placeholder="000.000.000-00"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <label>
+          Senha
+          <input id="lSenha" type="password" autocomplete="current-password" required />
+        </label>
+        <button class="btn">Entrar</button>
+        <button type="button" class="link" id="btnEsqueci">Esqueci minha senha</button>
+      </form>
+
+      <form id="formCadastro" class="form" hidden>
+        <label>
+          Nome completo
+          <input id="cNome" data-mascara="nome" autocomplete="name" maxlength="100" required />
+        </label>
+        <label>
+          CPF ou CNPJ
+          <input
+            id="cDoc"
+            data-mascara="doc"
+            inputmode="numeric"
+            maxlength="18"
+            placeholder="000.000.000-00"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <label>
+          E-mail (para recuperar a senha)
+          <input
+            id="cEmail"
+            type="email"
+            data-mascara="email"
+            maxlength="120"
+            autocomplete="email"
+            required
+          />
+        </label>
+        <label>
+          Telefone com DDD (opcional)
+          <input
+            id="cTel"
+            type="tel"
+            data-mascara="telefone"
+            maxlength="15"
+            placeholder="(11) 99999-8888"
+            autocomplete="tel"
+          />
+        </label>
+        <label>
+          Senha (mínimo 8 caracteres)
+          <input
+            id="cSenha"
+            type="password"
+            minlength="8"
+            maxlength="128"
+            autocomplete="new-password"
+            required
+          />
+        </label>
+        <button class="btn">Criar conta</button>
+      </form>
+
+      <form id="formEsqueci" class="form" hidden>
+        <h2>Recuperar senha</h2>
+        <p class="mut peq">
+          Informe seu CPF ou CNPJ. Enviaremos um link para o e-mail cadastrado (vale por 30
+          minutos).
+        </p>
+        <label>
+          CPF ou CNPJ
+          <input
+            id="eDoc"
+            data-mascara="doc"
+            inputmode="numeric"
+            maxlength="18"
+            placeholder="000.000.000-00"
+            required
+          />
+        </label>
+        <button class="btn">Enviar link</button>
+        <button type="button" class="link" id="btnVoltarLogin">Voltar ao login</button>
+      </form>
+    </dialog>
+
+    <dialog id="dlgRedefinir">
+      <button type="button" class="fechar" data-fechar aria-label="Fechar">×</button>
+      <h2>Criar nova senha</h2>
+      <form id="formRedefinir" class="form">
+        <label>
+          Nova senha (mínimo 8 caracteres)
+          <input
+            id="rSenha"
+            type="password"
+            minlength="8"
+            maxlength="128"
+            autocomplete="new-password"
+            required
+          />
+        </label>
+        <label>
+          Repita a nova senha
+          <input
+            id="rSenha2"
+            type="password"
+            minlength="8"
+            maxlength="128"
+            autocomplete="new-password"
+            required
+          />
+        </label>
+        <button class="btn">Salvar nova senha</button>
+      </form>
+    </dialog>
+
+    <dialog id="dlgRifa">
+      <button type="button" class="fechar" data-fechar aria-label="Fechar">×</button>
+      <h2 id="dlgRifaTitulo">Criar rifa</h2>
+      <form id="formRifa" class="form">
+        <label>
+          Título
+          <input name="titulo" data-mascara="texto" minlength="3" maxlength="60" required />
+        </label>
+        <label>
+          Por que está fazendo esta rifa?
+          <textarea
+            name="resumo"
+            data-mascara="resumo"
+            rows="3"
+            minlength="10"
+            maxlength="500"
+            required
+          ></textarea>
+        </label>
+        <label>
+          Prêmio
+          <input name="premio" data-mascara="texto" minlength="2" maxlength="100" required />
+        </label>
+        <label>Data do sorteio <input name="data_sorteio" type="date" required /></label>
+        <div class="duas">
+          <label>
+            Valor por número
+            <input
+              name="valor_numero"
+              data-mascara="valor"
+              inputmode="numeric"
+              maxlength="13"
+              placeholder="R$ 0,00"
+              required
+            />
+          </label>
+          <label
+            >Quantidade de números
+            <select name="qtd_numeros" id="cQtd" required></select
+          ></label>
+        </div>
+        <p class="mut peq" id="avisoFixos" hidden>
+          Valor e quantidade não mudam depois da primeira venda. O título também não muda, pois
+          identifica a rifa.
+        </p>
+        <label>
+          Imagem (JPG, PNG ou WEBP, até 4 MB)
+          <input name="imagem" id="cImg" type="file" accept="image/jpeg,image/png,image/webp" />
+        </label>
+        <label class="check" id="removerBox" hidden>
+          <input type="checkbox" name="remover_imagem" value="1" /> Remover a imagem atual
+        </label>
+        <img id="previa" alt="Prévia da imagem" hidden />
+        <button class="btn" id="btnSalvarRifa">Publicar rifa</button>
+      </form>
+    </dialog>
+
+    <dialog id="dlgConfirma">
+      <form method="dialog" class="form">
+        <h2>Tem certeza?</h2>
+        <p id="cfTexto"></p>
+        <label id="cfSenhaBox" hidden>
+          Confirme sua senha
+          <input id="cfSenha" type="password" autocomplete="current-password" />
+        </label>
+        <div class="botoes inverso">
+          <button class="btn perigo" value="ok">Confirmar</button>
+          <button class="btn suave" value="cancelar">Cancelar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="msg" role="status" aria-live="polite"></div>
+    <script src="js/verificar.js"></script>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
