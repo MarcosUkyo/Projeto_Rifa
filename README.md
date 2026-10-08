@@ -14,7 +14,7 @@ rifa-online/
 │   ├── auth.py           # cadastro, login, logout, "esqueci a senha"
 │   ├── perfil.py         # dados da conta, trocar senha, excluir conta
 │   ├── rifas.py          # rifas por link, criar/editar, compra, sorteio, excluir
-│   ├── admin.py          # painel do ADM: cargos e todas as rifas
+│   ├── admin.py          # painel da equipe: cargos (ADM) e todas as rifas (ADM e gerentes)
 │   ├── validacao.py      # máscaras/validações do servidor
 │   ├── emails.py         # envio de e-mail (SMTP)
 │   ├── sessao.py         # ajudantes de sessão e resposta
@@ -28,7 +28,7 @@ rifa-online/
 │       ├── conta.js      # login, cadastro, esqueci a senha
 │       ├── rifas.js      # lista, tela da rifa, compra, painel do organizador
 │       ├── perfil.js     # minha conta
-│       ├── admin.js      # painel do ADM
+│       ├── admin.js      # painel da equipe (ADM e gerentes)
 │       ├── exportar.js   # imagem da rifa, PNG/JPG/PDF, compartilhar
 │       ├── mascaras.js   # máscaras dos campos
 │       ├── tema.js       # troca de cor
@@ -66,20 +66,21 @@ Pelo `localhost` o navegador não mostra nenhuma pasta do seu computador.
 
 | Cargo | Pode |
 |---|---|
-| **Participante** | Entrar numa rifa **pelo link**, comprar números, ver seus números e a conta |
-| **Gerente** | Tudo do participante + criar rifas e, nas **suas** rifas: editar, ver participantes, sortear e excluir |
-| **ADM** | Tudo do gerente em **qualquer** rifa + painel com todos os usuários (mudar cargos) e todas as rifas |
+| **Participante** | Entrar em rifas, comprar números e **criar as próprias rifas** (editar, ver participantes, sortear e excluir as suas) |
+| **Gerente** | Tudo do participante + **ajudar na gestão de todas as rifas** (editar, ver participantes, sortear, excluir, trocar público/privado) pelo "Painel de apoio" |
+| **ADM** (dono do site) | Tudo do gerente + gerenciar usuários e cargos |
 
 O **primeiro cadastro** do site vira ADM; os demais nascem participantes e o ADM promove quem for gerente.
 Em produção, defina `RIFA_ADMIN_DOC` (CPF/CNPJ só com números): só esse documento nasce ADM.
-Bancos antigos migram sozinhos: o primeiro usuário vira ADM e quem já criou rifas vira gerente.
+Bancos antigos migram sozinhos: o primeiro usuário vira ADM e os demais viram participantes.
 
-### Rifa só por link
+### Rifas públicas e privadas
 
-- Cada rifa ganha um código secreto no link (`/?rifa=CÓDIGO`). Não existe lista pública de rifas.
-- Quem tem o link vê a rifa; para comprar precisa entrar ou se cadastrar.
-- A tela inicial mostra só as rifas que a pessoa organiza ou em que já comprou números.
-- Compartilhe o link pelos botões de WhatsApp, Facebook, Instagram ou "Copiar link".
+- **Privada** (padrão): só entra quem recebe o link (`/?rifa=CÓDIGO`, código secreto). Não aparece em lista nenhuma.
+- **Pública**: aparece para qualquer pessoa na página inicial (prêmios, doações, ajuda...). Comprar exige conta.
+  Mostra o nome do organizador. ADM e gerentes podem tornar uma rifa privada ou excluí-la.
+- Nos dois tipos a rifa tem link para compartilhar (WhatsApp, Facebook, Instagram ou "Copiar link").
+- A tela inicial também mostra as rifas que a pessoa organiza ou em que já comprou números.
 
 ### Data e sorteio
 
@@ -130,7 +131,7 @@ Use sempre atrás de HTTPS. A pasta `data/` nunca deve ir para o GitHub (já est
 - Máscaras no navegador + validação no servidor + `CHECK` no banco (três camadas)
 - Upload só JPG/PNG/WEBP, reencodado (remove EXIF/GPS) e salvo com nome = hash do conteúdo
 - Link de redefinição guardado só como hash, com validade e uso único; a resposta de "esqueci a senha" não revela quem tem conta
-- Rifas acessíveis só por código secreto (64 bits) com limite de tentativas; contatos só para organizador/ADM
+- Rifas privadas acessíveis só por código secreto (64 bits) com limite de tentativas; contatos só para organizador, gerentes e ADM
 - SQL parametrizado, CSP restritiva, sem bibliotecas externas no navegador, erros sem caminhos de pasta
 
 ## Licença

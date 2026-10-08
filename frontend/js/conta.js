@@ -1,5 +1,5 @@
 /* Login, cadastro, "esqueci a senha" e logout */
-import { $, estado, aviso, post, emitirSessao, ehGestor } from "./util.js";
+import { $, estado, aviso, post, emitirSessao, ehEquipe } from "./util.js";
 
 let tokenRedefinicao = "";
 
@@ -8,8 +8,8 @@ function atualizarTopo() {
   $("btnPerfil").hidden = !u;
   $("btnSair").hidden = !u;
   $("btnEntrar").hidden = !!u;
-  $("btnAdmin").hidden = u?.cargo !== "adm";
-  $("btnCriar").hidden = !ehGestor();
+  $("btnAdmin").hidden = !ehEquipe();
+  $("btnAdmin").textContent = u?.cargo === "adm" ? "Painel ADM" : "Painel de apoio";
   if (u) $("btnPerfil").textContent = "Olá, " + u.nome.split(" ")[0];
 }
 

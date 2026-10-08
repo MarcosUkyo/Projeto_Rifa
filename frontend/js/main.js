@@ -1,5 +1,5 @@
 /* Ponto de entrada: liga os módulos, carrega a sessão e escolhe a tela */
-import { $, estado, api, aviso, mostrarView } from "./util.js";
+import { $, estado, api, aviso, mostrarView, ehEquipe } from "./util.js";
 import { aplicarMascaras } from "./mascaras.js";
 import "./tema.js";
 import "./exportar.js";
@@ -28,7 +28,7 @@ function rotear() {
   const q = new URLSearchParams(location.search);
   if (q.get("rifa")) return abrirRifa(q.get("rifa"), false);
   if (q.get("perfil") && estado.usuario) return abrirPerfil(false);
-  if (q.get("admin") && estado.usuario?.cargo === "adm") return abrirAdmin(false);
+  if (q.get("admin") && ehEquipe()) return abrirAdmin(false);
   voltarLista(false);
 }
 addEventListener("popstate", rotear);

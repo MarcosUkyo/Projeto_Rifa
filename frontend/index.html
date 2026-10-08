@@ -40,15 +40,27 @@
       <!-- ===== Lista de rifas ===== -->
       <section id="viewLista" class="view">
         <div class="hero">
-          <h1>Rifas da empresa, só para quem recebeu o link</h1>
+          <h1>Rifas públicas e privadas, do seu jeito</h1>
           <p>
-            Cada rifa tem um link exclusivo. Quem recebe o link entra, escolhe os números e
-            participa. Gerentes criam e sorteiam; participantes acompanham seus números.
+            Crie uma rifa pública, aberta a todos, para prêmios, doações e ajuda, ou uma privada, só
+            para quem recebe o link. Escolha os números, sorteie e compartilhe nas redes.
           </p>
-          <button class="btn claro" id="btnCriar" hidden>Criar rifa</button>
+          <button class="btn claro" id="btnCriar">Criar rifa</button>
         </div>
-        <div id="lista" class="cards"></div>
-        <p id="vazio" class="mut" hidden></p>
+        <div class="bloco">
+          <h2>Minhas rifas e participações</h2>
+          <div id="lista" class="cards"></div>
+          <p id="vazio" class="mut" hidden></p>
+        </div>
+        <div class="bloco">
+          <h2>Rifas públicas</h2>
+          <p class="mut peq">
+            Abertas para qualquer pessoa ver. Para participar é preciso entrar na conta. As rifas
+            privadas não aparecem aqui: só quem tem o link entra.
+          </p>
+          <div id="listaPublicas" class="cards"></div>
+          <p id="vazioPublicas" class="mut" hidden>Nenhuma rifa pública no momento.</p>
+        </div>
       </section>
 
       <!-- ===== Uma rifa ===== -->
@@ -204,11 +216,11 @@
       <!-- ===== Painel do ADM ===== -->
       <section id="viewAdmin" class="view" hidden>
         <button class="btn suave" id="btnVoltarAdmin">Voltar às rifas</button>
-        <div class="painel">
+        <div class="painel" id="aUsuariosPainel">
           <h2>Usuários e cargos</h2>
           <p class="mut peq">
-            Participante: participa por link. Gerente: cria e gerencia as próprias rifas. ADM:
-            gerencia tudo.
+            Todo usuário cria e gerencia as próprias rifas. Os gerentes ajudam na gestão de todas as
+            rifas. O ADM, dono do site, também gerencia usuários e cargos.
           </p>
           <div id="aUsuarios"></div>
         </div>
@@ -378,6 +390,17 @@
           Prêmio
           <input name="premio" data-mascara="texto" minlength="2" maxlength="100" required />
         </label>
+        <label>
+          Tipo de rifa
+          <select name="visibilidade">
+            <option value="privada">Privada: só quem tem o link entra</option>
+            <option value="publica">Pública: aparece para todos no site</option>
+          </select>
+        </label>
+        <p class="mut peq">
+          Rifas públicas mostram o seu nome e ficam visíveis a qualquer pessoa, ideais para prêmios,
+          doações e ajuda.
+        </p>
         <label>Data do sorteio <input name="data_sorteio" type="date" required /></label>
         <div class="duas">
           <label>

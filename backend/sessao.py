@@ -6,8 +6,6 @@ from flask import g, jsonify, session
 
 from .db import db
 
-GESTORES = ("adm", "gerente")
-
 
 def erro(msg, codigo=400):
     return jsonify(erro=msg), codigo
@@ -32,17 +30,10 @@ def logado():
     return u["cpf_cnpj"] if u else None
 
 
-def eh_gestor():
-    u = usuario()
-    return bool(u and u["cargo"] in GESTORES)
-
-
 def pode_gerenciar(organizador):
-    """ADM gerencia qualquer rifa; gerente, só as que ele criou."""
+    """Cada usuário gerencia as rifas que criou; ADM e gerentes gerenciam qualquer rifa."""
     u = usuario()
-    return bool(
-        u and (u["cargo"] == "adm" or (u["cargo"] == "gerente" and u["cpf_cnpj"] == organizador))
-    )
+    return bool(u and (u["cargo"] in ("adm", "gerente") or u["cpf_cnpj"] == organizador))
 
 
 def abrir_sessao(doc, nome, cargo):

@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS cliente (
                       OR (length(email) BETWEEN 6 AND 120 AND email = lower(email)
                           AND email GLOB '*?@?*.??*' AND email NOT GLOB '*[^a-z0-9@._%+-]*')),
     senha_hash TEXT NOT NULL,
-    -- adm: tudo | gerente: cria e gerencia as próprias rifas | participante: participa por link
+    -- todos criam e gerenciam as próprias rifas | gerente: ajuda a gerir todas as rifas
+    -- adm (dono do site): tudo, inclusive usuários e cargos
     cargo      TEXT NOT NULL DEFAULT 'participante'
                CHECK (cargo IN ('adm', 'gerente', 'participante'))
 );
@@ -42,7 +43,9 @@ CREATE TABLE IF NOT EXISTS rifa (
     data_sorteio    TEXT CHECK (data_sorteio IS NULL
                                 OR data_sorteio GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
     numero_sorteado INTEGER CHECK (numero_sorteado IS NULL OR numero_sorteado >= 1),
-    sorteada_em     TEXT
+    sorteada_em     TEXT,
+    -- privada: só quem tem o link | publica: aparece para todos na página inicial
+    visibilidade    TEXT NOT NULL DEFAULT 'privada' CHECK (visibilidade IN ('publica', 'privada'))
 );
 
 -- chave composta natural: um número só é vendido uma vez por rifa

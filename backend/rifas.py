@@ -15,7 +15,7 @@ from . import DADOS
 from . import validacao as v
 from .auth import TENTATIVAS, bloqueado
 from .db import db, novo_codigo
-from .sessao import eh_gestor, erro, logado, pode_gerenciar
+from .sessao import erro, logado, pode_gerenciar
 
 bp = Blueprint("rifas", __name__)
 UPLOADS = DADOS / "uploads"
@@ -23,14 +23,14 @@ Image.MAX_IMAGE_PIXELS = 25_000_000  # proteção contra "bomba de descompressã
 
 SQL_BASE = """
     SELECT r.titulo, r.codigo, r.resumo, r.premio, r.valor_numero, r.qtd_numeros, r.imagem,
-           r.data_sorteio, r.numero_sorteado, r.sorteada_em, r.organizador AS org_doc,
+           r.data_sorteio, r.numero_sorteado, r.sorteada_em, r.visibilidade, r.organizador AS org_doc,
            c.nome AS organizador,
            (SELECT COUNT(*) FROM bilhete b WHERE b.rifa_titulo = r.titulo) AS vendidos
     FROM rifa r JOIN cliente c ON c.cpf_cnpj = r.organizador
 """
 CAMPOS_PUBLICOS = (
     "titulo codigo resumo premio valor_numero qtd_numeros imagem data_sorteio "
-    "numero_sorteado sorteada_em organizador vendidos"
+    "numero_sorteado sorteada_em visibilidade organizador vendidos"
 ).split()
 
 
@@ -131,6 +131,9 @@ def _validar(f, atual=None):
     if atual:  # campos desabilitados no formulário não são enviados: ficam como estão
         qtd = qtd or atual["qtd_numeros"]
         valor = valor or atual["valor_numero"]
+    vis = f.get("visibilidade") or (atual["visibilidade"] if atual else "privada")
+    if vis not in ("publica", "privada"):
+        return None, "Tipo de rifa inválido."
     if not resumo:
         return None, "O resumo deve ter de 10 a 500 caracteres."
     if not premio:
@@ -141,7 +144,7 @@ def _validar(f, atual=None):
         return None, "Quantidade inválida: use 80, 100, 120... até 200."
     if not valor:
         return None, "Valor por número inválido (até R$ 10.000,00)."
-    return dict(resumo=resumo, premio=premio, data=data, qtd=qtd, valor=valor), None
+    return dict(resumo=resumo, premio=premio, data=data, qtd=qtd, valor=valor, vis=vis), None
 
 
 # ---------- imagens ----------
@@ -187,13 +190,36 @@ def ver_rifa():
     )
 
 
+@bp.get("/api/publicas")
+def publicas():
+    """Rifas públicas: qualquer pessoa vê (comprar exige login). As abertas vêm primeiro."""
+    linhas = db().execute(
+        SQL_BASE + " WHERE r.visibilidade = 'publica' "
+        "ORDER BY (r.sorteada_em IS NOT NULL), r.rowid DESC LIMIT 60"
+    )
+    return jsonify([_publico(r) for r in linhas.fetchall()])
+
+
+@bp.post("/api/rifas/visibilidade")
+def mudar_visibilidade():
+    d = request.get_json(silent=True) or {}
+    r, resp = _gerenciavel(d.get("codigo"))
+    if resp:
+        return resp
+    if d.get("visibilidade") not in ("publica", "privada"):
+        return erro("Tipo de rifa inválido.")
+    with db() as c:
+        c.execute(
+            "UPDATE rifa SET visibilidade = ? WHERE titulo = ?", (d["visibilidade"], r["titulo"])
+        )
+    return jsonify(ok=True)
+
+
 # ---------- criar e editar ----------
 @bp.post("/api/rifas")
 def criar():
     if not logado():
         return erro("Entre na sua conta para criar uma rifa.", 401)
-    if not eh_gestor():
-        return erro("Só gerentes e ADM podem criar rifas.", 403)
     f = request.form
     titulo = v.texto_curto(f.get("titulo"), 3, 60)
     if not titulo:
@@ -212,7 +238,7 @@ def criar():
         with db() as c:
             c.execute(
                 "INSERT INTO rifa (titulo, resumo, premio, valor_numero, qtd_numeros, imagem, "
-                "organizador, codigo, data_sorteio) VALUES (?,?,?,?,?,?,?,?,?)",
+                "organizador, codigo, data_sorteio, visibilidade) VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (
                     titulo,
                     dados["resumo"],
@@ -223,6 +249,7 @@ def criar():
                     logado(),
                     codigo,
                     dados["data"],
+                    dados["vis"],
                 ),
             )
     except sqlite3.IntegrityError:
@@ -255,7 +282,7 @@ def editar():
     with db() as c:
         c.execute(
             "UPDATE rifa SET resumo = ?, premio = ?, data_sorteio = ?, valor_numero = ?, "
-            "qtd_numeros = ?, imagem = ? WHERE titulo = ?",
+            "qtd_numeros = ?, imagem = ?, visibilidade = ? WHERE titulo = ?",
             (
                 dados["resumo"],
                 dados["premio"],
@@ -263,6 +290,7 @@ def editar():
                 dados["valor"],
                 dados["qtd"],
                 imagem,
+                dados["vis"],
                 r["titulo"],
             ),
         )

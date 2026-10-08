@@ -1,17 +1,5 @@
 /* Lista, formulário (criar/editar), tela da rifa, compra, sorteio e painel do organizador */
-import {
-  $,
-  el,
-  brl,
-  estado,
-  aviso,
-  api,
-  post,
-  mostrarView,
-  confirmar,
-  dataBR,
-  ehGestor,
-} from "./util.js";
+import { $, el, brl, estado, aviso, api, post, mostrarView, confirmar, dataBR } from "./util.js";
 import { mascarar, valorEmReais } from "./mascaras.js";
 import { pedirLogin } from "./conta.js";
 
@@ -35,23 +23,21 @@ export function voltarLista(empurrar = true) {
   mostrarView("viewLista");
 }
 
-/* ---------- Lista: só rifas que o usuário organiza ou em que participa ---------- */
-export async function carregarRifas() {
-  estado.rifas = await api("/api/rifas");
-  const lista = $("lista");
+/* ---------- Listas: minhas rifas (organizo ou participo) e rifas públicas ---------- */
+function desenharCards(lista, rifas, publica) {
   lista.replaceChildren();
-  $("vazio").hidden = estado.rifas.length > 0;
-  $("vazio").textContent = !estado.usuario
-    ? "Para participar de uma rifa, abra o link que o organizador enviou."
-    : ehGestor()
-      ? "Você ainda não tem rifas. Crie uma ou abra o link de uma rifa que recebeu."
-      : "Você ainda não participa de nenhuma rifa. Abra o link que o organizador enviou.";
-  estado.rifas.forEach((r) => {
+  rifas.forEach((r) => {
     const b = el("button", "bilhete");
     b.type = "button";
     const corpo = el("div", "corpo");
-    corpo.append(el("h3", "", r.titulo), el("span", "mut", "Prêmio: " + r.premio));
-    corpo.append(el("span", "selo", r.papel === "organizador" ? "Sua rifa" : "Participando"));
+    corpo.append(el("h3", "", r.titulo));
+    corpo.append(
+      el("span", "mut", (publica ? `por ${r.organizador} · ` : "") + "Prêmio: " + r.premio),
+    );
+    if (!publica) {
+      corpo.append(el("span", "selo", r.papel === "organizador" ? "Sua rifa" : "Participando"));
+      corpo.append(el("span", "selo", r.visibilidade === "publica" ? "Pública" : "🔒 Privada"));
+    }
     if (r.status !== "aberta") corpo.append(el("span", "selo " + r.status, ROTULO[r.status]));
     const barra = el("div", "barra"),
       prog = el("span");
@@ -72,6 +58,18 @@ export async function carregarRifas() {
   });
 }
 
+export async function carregarRifas() {
+  const [minhas, publicas] = await Promise.all([api("/api/rifas"), api("/api/publicas")]);
+  estado.rifas = minhas;
+  desenharCards($("lista"), minhas, false);
+  desenharCards($("listaPublicas"), publicas, true);
+  $("vazio").hidden = minhas.length > 0;
+  $("vazio").textContent = estado.usuario
+    ? "Você ainda não tem rifas. Crie a sua ou abra o link de uma rifa que recebeu."
+    : "Entre na sua conta para ver suas rifas, ou abra o link de uma rifa privada que recebeu.";
+  $("vazioPublicas").hidden = publicas.length > 0;
+}
+
 /* ---------- Formulário: criar e editar ---------- */
 let editando = null;
 const hojeLocal = () =>
@@ -88,6 +86,7 @@ function abrirFormRifa(r = null) {
   $("btnSalvarRifa").textContent = r ? "Salvar alterações" : "Publicar rifa";
   const hoje = hojeLocal();
   f.titulo.readOnly = !!r;
+  f.visibilidade.value = r ? r.visibilidade : "privada";
   f.data_sorteio.min = r && r.data_sorteio && r.data_sorteio < hoje ? "" : hoje;
   const fixos = !!r && r.vendidos > 0;
   f.valor_numero.disabled = fixos;
@@ -185,7 +184,9 @@ export async function abrirRifa(codigo, empurrar = true) {
     if (empurrar) history.pushState({}, "", "/?rifa=" + encodeURIComponent(r.codigo));
     $("capa").replaceChildren(capa(r));
     $("rTitulo").textContent = r.titulo;
-    $("rOrg").textContent = "Organizada por " + r.organizador;
+    $("rOrg").textContent =
+      `Organizada por ${r.organizador} · ` +
+      (r.visibilidade === "publica" ? "Rifa pública" : "🔒 Rifa privada (só pelo link)");
     $("rResumo").textContent = r.resumo;
     $("rPremio").textContent = "🎁 " + r.premio;
     $("rValor").textContent = brl(r.valor_numero) + " por número";

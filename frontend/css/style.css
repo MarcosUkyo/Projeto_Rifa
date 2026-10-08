@@ -681,3 +681,15 @@ dialog::backdrop {
   background: #c0392b;
   color: #fff;
 }
+
+.bloco {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.bloco h2 {
+  margin: 0;
+}
+.bloco .cards {
+  margin-top: 0;
+}

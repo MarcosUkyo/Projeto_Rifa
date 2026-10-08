@@ -9,7 +9,6 @@ import {
   mostrarView,
   confirmar,
   emitirSessao,
-  ehGestor,
   CARGOS,
 } from "./util.js";
 import { mascarar } from "./mascaras.js";
@@ -67,7 +66,6 @@ export async function abrirPerfil(empurrar = true) {
     $("pEmail").value = p.email;
     $("pTel").value = mascarar("telefone", p.telefone);
     $("pAvisoEmail").hidden = !!p.email;
-    $("pRifasPainel").hidden = !ehGestor();
     preencher($("pRifas"), p.rifas, itemRifa, "Você ainda não criou rifas.");
     preencher($("pPart"), p.participacoes, itemParticipacao, "Você ainda não comprou números.");
     if (empurrar) history.pushState({}, "", "/?perfil=1");

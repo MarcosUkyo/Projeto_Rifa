@@ -1,4 +1,4 @@
-"""Painel do ADM: usuários, cargos e todas as rifas."""
+"""Painel da equipe: o ADM (dono do site) e os gerentes (apoio)."""
 
 from flask import Blueprint, jsonify, request
 
@@ -11,16 +11,24 @@ bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
 
 @bp.before_request
-def so_adm():
+def so_equipe():
     u = usuario()
     if not u:
         return erro("Entre na sua conta.", 401)
-    if u["cargo"] != "adm":
-        return erro("Área exclusiva do ADM.", 403)
+    if u["cargo"] not in ("adm", "gerente"):
+        return erro("Área exclusiva da equipe.", 403)
+
+
+def _so_adm():
+    """Resposta de erro se o usuário não for ADM; None se for."""
+    if usuario()["cargo"] != "adm":
+        return erro("Só o ADM gerencia usuários e cargos.", 403)
 
 
 @bp.get("/usuarios")
 def usuarios():
+    if resp := _so_adm():
+        return resp
     linhas = (
         db().execute("SELECT cpf_cnpj, nome, email, cargo FROM cliente ORDER BY nome").fetchall()
     )
@@ -29,6 +37,8 @@ def usuarios():
 
 @bp.post("/cargo")
 def mudar_cargo():
+    if resp := _so_adm():
+        return resp
     d = request.get_json(silent=True) or {}
     doc, cargo = v.documento(d.get("cpf_cnpj")), d.get("cargo")
     if cargo not in v.CARGOS or not doc:

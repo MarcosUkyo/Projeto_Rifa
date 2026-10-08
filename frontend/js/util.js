@@ -80,7 +80,8 @@ export function confirmar(texto, pedirSenha = false) {
 
 export const CARGOS = { adm: "ADM", gerente: "Gerente", participante: "Participante" };
 
-export const ehGestor = () => ["adm", "gerente"].includes(estado.usuario?.cargo);
-
 /** "2026-10-08" -> "08/10/2026" */
 export const dataBR = (iso) => iso.split("-").reverse().join("/");
+
+/** ADM (dono do site) e gerentes (apoio) */
+export const ehEquipe = () => ["adm", "gerente"].includes(estado.usuario?.cargo);

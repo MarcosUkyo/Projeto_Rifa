@@ -40,6 +40,11 @@ COLUNAS_NOVAS = [
     ),
     ("rifa", "numero_sorteado", "INTEGER CHECK (numero_sorteado IS NULL OR numero_sorteado >= 1)"),
     ("rifa", "sorteada_em", "TEXT"),
+    (
+        "rifa",
+        "visibilidade",
+        "TEXT NOT NULL DEFAULT 'privada' CHECK (visibilidade IN ('publica', 'privada'))",
+    ),
 ]
 
 
@@ -80,10 +85,6 @@ def _migrar(conn):
             conn.execute(
                 "UPDATE cliente SET cargo = 'adm' WHERE rowid = (SELECT min(rowid) FROM cliente)"
             )
-        conn.execute(
-            "UPDATE cliente SET cargo = 'gerente' "
-            "WHERE cargo = 'participante' AND cpf_cnpj IN (SELECT organizador FROM rifa)"
-        )
 
 
 def init_app(app):
